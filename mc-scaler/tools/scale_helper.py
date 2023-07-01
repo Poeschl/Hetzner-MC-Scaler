@@ -6,22 +6,25 @@ from hcloud.server_types.domain import ServerType
 from hcloud.servers.domain import ServerCreatePublicNetwork
 
 
-def scale_with_helper_host(client: Client, helper_type: ServerType, city: str, scale_host_name: str, scale_type: ServerType):
-  helper_host_name = "{}-helper".format(scale_host_name)
+def scale_with_helper_host(client: Client, helper_type: ServerType, city: str, scale-host - name: str
 
-  logging.info("Start scaling via an helper (%s,%s). Target host '%s' scaling to %s", helper_host_name, helper_type.name, scale_host_name, scale_type.name)
+, scale_type: ServerType):
+helper_host_name = "{}-helper".format(scale - host - name)
 
-  existing_scale_helper = client.servers.get_by_name(name=helper_host_name)
-  if existing_scale_helper is not None:
+logging.info("Start scaling via an helper (%s,%s). Target host '%s' scaling to %s", helper_host_name, helper_type.name,
+             scale - host - name, scale_type.name)
+
+existing_scale_helper = client.servers.get_by_name(name=helper_host_name)
+if existing_scale_helper is not None:
     logging.info("Cleanup helper instance first")
-    teardown_helper_host(client, scale_host_name)
+    teardown_helper_host(client, scale - host - name)
 
-  host_location = None
-  for location in client.locations.get_all():
+host_location = None
+for location in client.locations.get_all():
     if location.city == city:
       host_location = location
 
-  scale_host = client.servers.get_by_name(scale_host_name)
+scale_host = client.servers.get_by_name(scale - host - name)
 
   user_data = """
     #cloud-config
@@ -63,18 +66,20 @@ def scale_with_helper_host(client: Client, helper_type: ServerType, city: str, s
       - "/root/start.sh"
   """.format(token=client.token, id=scale_host.data_model.id, scale_type=scale_type.name)
 
-  scale_helper = client.servers.create(name=helper_host_name,
-                                       server_type=helper_type,
-                                       image=Image(name="ubuntu-22.04"),
-                                       location=host_location,
-                                       public_net=ServerCreatePublicNetwork(enable_ipv4=False, enable_ipv6=True),
-                                       user_data=user_data)
-  logging.info("Started %s with root passwd: %s", scale_helper.server.name, scale_helper.root_password)
+scale_helper = client.servers.create(name=helper_host_name,
+                                     server_type=helper_type,
+                                     image=Image(name="ubuntu-22.04"),
+                                     location=host_location,
+                                     public_net=ServerCreatePublicNetwork(enable_ipv4=False, enable_ipv6=True),
+                                     user_data=user_data)
+logging.info("Started %s with root passwd: %s", scale_helper.server.name, scale_helper.root_password)
 
 
-def teardown_helper_host(client: Client, scale_host_name: str):
-  helper = client.servers.get_by_name("{}-helper".format(scale_host_name))
+def teardown_helper_host(client: Client, scale-host - name: str
 
-  if helper is not None:
+):
+helper = client.servers.get_by_name("{}-helper".format(scale - host - name))
+
+if helper is not None:
     logging.info("Cleanup helper instance")
     client.servers.delete(helper)

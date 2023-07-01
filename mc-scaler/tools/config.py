@@ -12,12 +12,14 @@ class ScaleState(Enum):
 
 CONFIG_FILE = "config.yaml"
 DEFAULT_CONFIG = {"state": 0,
-                  "hcloud_token": "",
-                  "scale_host_name": "mc-host",
+                  "hcloud-token": "",
+                  "scale-host-name": "mc-host",
                   "standby-type": "cax11",
                   "scaled-type": "cax31",
                   "helper-type": "cax11",
-                  "city": "Falkenstein"}
+                  "city": "Falkenstein",
+                  "standby-listen-port:": "25565",
+                  "running-container-name": "minecraft-server"}
 
 
 def read_config() -> dict:
