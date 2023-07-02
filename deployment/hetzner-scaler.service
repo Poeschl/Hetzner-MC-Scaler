@@ -6,7 +6,7 @@ After=multi-user.target
 Type=simple
 Restart=always
 # Adjust the path below to your system
-RootDirectory=/home/<username>/hetzner-mc-scaler
+RootDirectory=/root/Hetzner-MC-Scaler
 ExecStart=/usr/bin/python3 mc-scaler\mc-scaler.py
 
 [Install]
