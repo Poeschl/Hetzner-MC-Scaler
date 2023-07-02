@@ -26,7 +26,8 @@ Its expected that this container shuts itself automatically down, when no player
 
 The setup is directly executed on the host which will be the minecraft server.
 So the creation of a hetzner cloud host is not described here (but a cloud-init is given).
-For setup choose the standby server type (recommendation: CAX11).
+For setup choose the stand-by server type (recommendation: CAX11).
+Also set up an ssh key for access, otherwise you will get a lot password email.
 
 ### Cloud-init script
 
