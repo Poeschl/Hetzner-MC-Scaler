@@ -3,7 +3,6 @@ import socket
 from logging import basicConfig, INFO, info
 from optparse import OptionParser
 from time import sleep
-from typing import List
 
 import docker
 from docker.models.containers import Container
@@ -11,49 +10,46 @@ from hcloud import Client
 from hcloud.server_types.domain import ServerType
 
 from tools.config import read_config, save_state, ScaleState
-from tools.scale_helper import scale_with_helper_host
+from tools.scale_helper import scale_with_helper_host, teardown_helper_host
 
 
 def scale_up_host(config: dict, client: Client):
   save_state(ScaleState.SCALED)
-  scale_with_helper_host(client, ServerType(name=config['helper-type']), config['city'], config['scale-host-name'], ServerType(name=config['scaled-type']))
+  scale_with_helper_host(client, ServerType(name=config['helper-type']), config['city'], config['scale-host-name'],
+                         ServerType(name=config['scaled-type']))
 
 
 def scale_down_host(config: dict, client: Client):
   save_state(ScaleState.STANDBY)
-  scale_with_helper_host(client, ServerType(name=config['helper-type']), config['city'], config['scale-host-name'], ServerType(name=config['standby-type']))
+  scale_with_helper_host(client, ServerType(name=config['helper-type']), config['city'], config['scale-host-name'],
+                         ServerType(name=config['standby-type']))
 
 
 def wait_for_minecraft_socket(port: int):
-  MC_PAYLOAD = '\x16\x00ò\x05\x0f'
-
   try:
     listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listen_socket.bind(('', port))
     listen_socket.listen(1)
 
-    listening = True
-    while listening:
-      connection, _ = listen_socket.accept()
+    connection, _ = listen_socket.accept()
 
-      data: bytes = connection.recv(1024)
-      buffer = data.decode("ansi")
-
-      logging.info("Received data: {}".format(buffer))
-      if MC_PAYLOAD in buffer:
-        listening = False
+    data: bytes = connection.recv(1024)
+    connection.close()
+    logging.info("Received data: {}".format(data))
 
   except socket.error as msg:
     logging.error("Network Error: {}".format(msg))
     exit(1)
+  else:
+    listen_socket.close()
 
 
 def start_container(container_name: str):
   docker_client = docker.from_env()
 
-  container: List[Container] = docker_client.containers.list(filters={"id": container_name})
-  logging.debug(container)
-  container[0].start()
+  container: Container = docker_client.containers.get(container_name)
+  container.start()
+  logging.info("Started container: {}".format(container.name))
 
 
 def is_container_running(container_name: str) -> bool:
@@ -81,6 +77,9 @@ def main(force_scale_up: bool, force_scale_down: bool):
   elif force_scale_up:
     scale_up_host(current_config, hetzner_client)
   else:
+
+    teardown_helper_host(hetzner_client, current_config['scale-host-name'])
+
     if current_config['state'] == ScaleState.STANDBY.value:
       info("Waiting for Minecraft Client to attempt connection")
 
@@ -88,24 +87,33 @@ def main(force_scale_up: bool, force_scale_down: bool):
       logging.info("Minecraft payload detected")
       scale_up_host(current_config, hetzner_client)
 
+      # Wait for helper to scale
+      sleep(10 * 60)
+
     else:
       info("Scaled up state detected. Starting docker container")
       start_container(current_config['running-container-name'])
 
+      sleep(10)
       info("Waiting for docker container to shutdown")
 
       while is_container_running(current_config['running-container-name']):
-        sleep(60)
+        sleep(10)
       logging.info("Minecraft container not running any more")
       scale_down_host(current_config, hetzner_client)
+
+      # Wait for helper to scale
+      sleep(10 * 60)
 
 
 if __name__ == '__main__':
   basicConfig(level=INFO)
 
   parser = OptionParser()
-  parser.add_option("--scale-up", help="Force the scale up of the given host.", action="store_true", dest="scale_up", default=False)
-  parser.add_option("--scale-down", help="Force the scale down of the given host.", action="store_true", dest="scale_down", default=False)
+  parser.add_option("--scale-up", help="Force the scale up of the given host.", action="store_true", dest="scale_up",
+                    default=False)
+  parser.add_option("--scale-down", help="Force the scale down of the given host.", action="store_true",
+                    dest="scale_down", default=False)
 
   opts, args = parser.parse_args()
   exit(main(opts.scale_up, opts.scale_down))

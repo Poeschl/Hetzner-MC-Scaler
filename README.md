@@ -37,6 +37,7 @@ For easy deployment of the scaled host the following cloud-init script can be us
 
 package_update: true
 package_upgrade: true
+
 packages:
   - apt-transport-https
   - ca-certificates
@@ -46,19 +47,21 @@ packages:
   - python3
   - python3-pip
   - git
+  - 
 runcmd:
   - mkdir -p /etc/apt/keyrings
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-  - apt-get update -y
-  - apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  - apt-get update 
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
   - systemctl start docker
   - systemctl enable docker
   - git clone https://github.com/Poeschl/Hetzner-MC-Scaler /root/Hetzner-MC-Scaler
   - cd /root/Hetzner-MC-Scaler && pip install
   - cp /root/Hetzner-MC-Scaler/deployment/hetzner-scaler.service /etc/systemd/system
   - systemctl daemon-reload
-  - systemctl start hetzner-scaler && sleep 10 && systemctl stop hetzner-scaler
+  - systemctl start hetzner-scaler && sleep 2 && systemctl stop hetzner-scaler
+  - mkdir /root/minecraft
 
 ```
 
@@ -84,7 +87,7 @@ After that the provided systemd service file needs to be registered to allow the
 ```bash
 cp deployment/hetzner-scaler.service /etc/systemd/system
 systemctl daemon-reload
-systemctl start hetzner-scaler && sleep 10 && systemctl stop hetzner-scaler 
+systemctl start hetzner-scaler && sleep 2 && systemctl stop hetzner-scaler 
 ```
 
 After that a `config.yaml` file should appear in the project folder of the checkout out project.
@@ -100,27 +103,22 @@ Now create yourself a `docker-compose.yaml` file at a location of your liking.
 Its content could look like this:
 
 ```yaml
-version: '3'
+version: "3"
+
 services:
-  delivery_inc:
-    image: itzg/minecraft-server:java11-jdk
-    volumes:
-      - /etc/timezone:/etc/timezone:ro
-      - /root/minecraft/DeliveryInc/data:/data
+  mc:
+    image: itzg/minecraft-server
+    tty: true
+    stdin_open: true
     ports:
       - "25565:25565"
-    entrypoint: [ "sh", "-c", "apt-get install -y wget && /start" ]
     environment:
-      TYPE: "CURSEFORGE"
-      EULA: "true"
-      MEMORY: 4G
-      VERSION: "1.16.5"
-      ENABLE_ROLLING_LOGS: "true"
-      USE_AIKAR_FLAGS: "true"
-      CF_BASE_DIR: "/data"
-      CF_SERVER_MOD: "/modpack/DeliveryInc-Server-1.16.5-1.0.29.zip"
+      EULA: "TRUE"
       RCON_CMDS_ON_DISCONNECT: save-all
       RCON_CMDS_LAST_DISCONNECT: stop
+    volumes:
+      # attach the relative directory 'data' to the container's /data path
+      - ./data:/data
 ```
 
 Make sure to have the `stop` command included in you `RCON_CMDS_LAST_DISCONNECT` settings, so that the docker container
