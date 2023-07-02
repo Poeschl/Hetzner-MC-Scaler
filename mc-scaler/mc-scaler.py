@@ -3,8 +3,10 @@ import socket
 from logging import basicConfig, INFO, info
 from optparse import OptionParser
 from time import sleep
+from typing import List
 
 import docker
+from docker.models.containers import Container
 from hcloud import Client
 from hcloud.server_types.domain import ServerType
 
@@ -46,6 +48,14 @@ def wait_for_minecraft_socket(port: int):
     exit(1)
 
 
+def start_container(container_name: str):
+  docker_client = docker.from_env()
+
+  container: List[Container] = docker_client.containers.list(filters={"id": container_name})
+  logging.debug(container)
+  container[0].start()
+
+
 def is_container_running(container_name: str) -> bool:
   RUNNING = "running"
   docker_client = docker.from_env()
@@ -79,7 +89,10 @@ def main(force_scale_up: bool, force_scale_down: bool):
       scale_up_host(current_config, hetzner_client)
 
     else:
-      info("Waiting for Minecraft docker container to shutdown")
+      info("Scaled up state detected. Starting docker container")
+      start_container(current_config['running-container-name'])
+
+      info("Waiting for docker container to shutdown")
 
       while is_container_running(current_config['running-container-name']):
         sleep(60)
