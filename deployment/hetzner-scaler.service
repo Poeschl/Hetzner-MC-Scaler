@@ -1,0 +1,13 @@
+[Unit]
+Description=Hetzner Scaler
+After=multi-user.target
+
+[Service]
+Type=simple
+Restart=always
+# Adjust the path below to your system
+RootDirectory=/home/<username>/hetzner-mc-scaler
+ExecStart=/usr/bin/python3 mc-scaler\mc-scaler.py
+
+[Install]
+WantedBy=multi-user.target
