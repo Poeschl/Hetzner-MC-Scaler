@@ -47,7 +47,7 @@ packages:
   - python3
   - python3-pip
   - git
-  - 
+
 runcmd:
   - mkdir -p /etc/apt/keyrings
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -57,11 +57,12 @@ runcmd:
   - systemctl start docker
   - systemctl enable docker
   - git clone https://github.com/Poeschl/Hetzner-MC-Scaler /root/Hetzner-MC-Scaler
-  - cd /root/Hetzner-MC-Scaler && pip install
+  - cd /root/Hetzner-MC-Scaler && pip install -r requirements.txt
   - cp /root/Hetzner-MC-Scaler/deployment/hetzner-scaler.service /etc/systemd/system
   - systemctl daemon-reload
   - systemctl start hetzner-scaler && sleep 2 && systemctl stop hetzner-scaler
   - mkdir /root/minecraft
+  - reboot
 
 ```
 
@@ -123,7 +124,6 @@ services:
 
 Make sure to have the `stop` command included in you `RCON_CMDS_LAST_DISCONNECT` settings, so that the docker container
 stops automatically when the last user disconnects.
-Also adjust the `MEMORY` to the amount of memory you have available when the host is at the scaled up mode.
 
 After starting the docker-compose with `docker compose up -d` for the first time you should check if you can connect
 successfully and the minecraft server is set up as required.

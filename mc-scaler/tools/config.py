@@ -18,7 +18,7 @@ DEFAULT_CONFIG = {"state": 0,
                   "scaled-type": "cax31",
                   "helper-type": "cax11",
                   "city": "Falkenstein",
-                  "standby-listen-port:": "25565",
+                  "standby-listen-port": "25565",
                   "running-container-name": "minecraft-server"}
 
 
