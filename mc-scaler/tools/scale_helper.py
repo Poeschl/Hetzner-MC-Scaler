@@ -26,6 +26,8 @@ def scale_with_helper_host(client: Client, helper_type: ServerType, city: str, s
 
     scale_host = client.servers.get_by_name(scale_host_name)
 
+    ssh_keys = client.ssh_keys.get_all()
+
     user_data = """
         #cloud-config
         
@@ -71,8 +73,9 @@ def scale_with_helper_host(client: Client, helper_type: ServerType, city: str, s
                                          image=Image(name="ubuntu-22.04"),
                                          location=host_location,
                                          public_net=ServerCreatePublicNetwork(enable_ipv4=False, enable_ipv6=True),
-                                         user_data=user_data)
-    logging.info("Started %s with root passwd: %s", scale_helper.server.name, scale_helper.root_password)
+                                         user_data=user_data,
+                                         ssh_keys=ssh_keys)
+    logging.info("Started %s (Assigning all available SSH Keys)", scale_helper.server.name)
 
 
 def teardown_helper_host(client: Client, scale_host_name: str):
