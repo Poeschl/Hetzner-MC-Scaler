@@ -137,6 +137,24 @@ Adjust the standby-type and scale-type to your liking and budget.
 Finally, stop the minecraft server with `docker compose stop` at the server folder.
 Leave the `state` setting as it is a scale your host back to the standby server type.
 
+## Adjust Trigger payload
+
+Since there are a lot of port scans out there which will trigger the scaling, the payload is checked against the
+minecraft
+client.
+
+For a correct setup, look at the logs of the mc-scaler at `/root/Hetzner-MC-Scaler/mc-scaler.log` after you tried to
+connect to the host. There you should find logs like this:
+
+```text
+2023-07-23 18:21:43,275 - Received data: 1600f2050f6c6f63616c686f737400464d4c320063dd01
+2023-07-23 18:21:43,416 - Received data: fe01fa000b004d0043007c00500069006e00670048006f0073007400197f0009006c006f00630061006c0068006f00730074000063dd
+```
+
+Take the longer data string and replace the `standby_trigger_hex_payload` setting in the config file with it.
+
+## Finish line
+
 After that the scaler can be started with the following commands.
 
 ```bash
@@ -146,21 +164,3 @@ systemctl start hetzner-scaler
 
 Now the host should scale up as soon a minecraft client tries to connect and scales down as soon the last player leaves
 the server.
-
-## Trigger payload
-
-Since there are a lot of port scans out there which will trigger the scaling, the payload is checked against the
-minecraft
-client.
-
-It should work for most clients out of the box, but if not follow those steps.
-
-Look at the logs of the mc-scaler at `/root/Hetzner-MC-Scaler/mc-scaler.log` after you tried to connect to the host.
-There you should find logs like this:
-
-```text
-2023-07-23 18:21:43,275 - Received data: 1600f2050f6c6f63616c686f737400464d4c320063dd01
-2023-07-23 18:21:43,416 - Received data: fe01fa000b004d0043007c00500069006e00670048006f0073007400197f0009006c006f00630061006c0068006f00730074000063dd
-```
-
-Take the longer data string and replace the `standby_trigger_hex_payload` setting in the config file with it.

@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {"state": 0,
                   "city": "Falkenstein",
                   "standby-listen-port": "25565",
                   "running-container-name": "minecraft-server",
-                  "standby_trigger_hex_payload": "fe01fa000b004d0043007c00500069006e00670048006f0073007400197f0009006c006f00630061006c0068006f00730074000063dd"}
+                  "standby_trigger_hex_payload": "fe01fa000b004d0043007c00500069006e00670048006f0073007400237f000e006d0063002e0070006f0065007300630068006c002e00780079007a000063dd"}
 
 
 def read_config() -> dict:
