@@ -25,17 +25,23 @@ def scale_down_host(config: dict, client: Client):
                          ServerType(name=config['standby-type']))
 
 
-def wait_for_minecraft_socket(port: int):
+def wait_for_minecraft_socket(port: int, hex_payload: str):
   try:
     listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     listen_socket.bind(('', port))
     listen_socket.listen(1)
+    logging.info("Listening for: {}".format(hex_payload))
 
-    connection, _ = listen_socket.accept()
+    while True:
+      connection, _ = listen_socket.accept()
 
-    data: bytes = connection.recv(1024)
-    connection.close()
-    logging.info("Received data: {}".format(data))
+      data: bytes = connection.recv(1024)
+      connection.close()
+      logging.info("Received data: {}".format(data.hex()))
+
+      if data.hex() == hex_payload:
+        logging.info("Correct payload detected")
+        break
 
   except socket.error as msg:
     logging.error("Network Error: {}".format(msg))
@@ -83,8 +89,7 @@ def main(force_scale_up: bool, force_scale_down: bool):
     if current_config['state'] == ScaleState.STANDBY.value:
       info("Waiting for Minecraft Client to attempt connection")
 
-      wait_for_minecraft_socket(current_config['standby-listen-port'])
-      logging.info("Minecraft payload detected")
+      wait_for_minecraft_socket(current_config['standby-listen-port'], current_config['standby_trigger_hex_payload'])
       scale_up_host(current_config, hetzner_client)
 
       # Wait for helper to scale
@@ -107,7 +112,9 @@ def main(force_scale_up: bool, force_scale_down: bool):
 
 
 if __name__ == '__main__':
-  basicConfig(level=INFO)
+  basicConfig(level=INFO, format="%(asctime)s - %(message)s",
+              handlers=[logging.FileHandler("mc-scaler.log", mode='a'),
+                        logging.StreamHandler()])
 
   parser = OptionParser()
   parser.add_option("--scale-up", help="Force the scale up of the given host.", action="store_true", dest="scale_up",
