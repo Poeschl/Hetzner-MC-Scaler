@@ -26,28 +26,26 @@ def scale_down_host(config: dict, client: Client):
 
 
 def wait_for_minecraft_socket(port: int, hex_payload: str):
-  try:
-    listen_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listen_socket.bind(('', port))
-    listen_socket.listen(1)
-    logging.info("Listening for: {}".format(hex_payload))
+  with socket.create_server(('', port)) as server:
+    try:
+      logging.info("Listening for: {}".format(hex_payload))
 
-    while True:
-      connection, _ = listen_socket.accept()
+      while True:
+        connection, _ = server.accept()
 
-      data: bytes = connection.recv(1024)
-      connection.close()
-      logging.info("Received data: {}".format(data.hex()))
+        data: bytes = connection.recv(1024)
+        connection.close()
+        logging.info("Received data: {}".format(data.hex()))
 
-      if data.hex() == hex_payload:
-        logging.info("Correct payload detected")
-        break
+        if data.hex() == hex_payload:
+          logging.info("Correct payload detected")
+          break
 
-  except socket.error as msg:
-    logging.error("Network Error: {}".format(msg))
-    exit(1)
-  else:
-    listen_socket.close()
+    except socket.error as msg:
+      logging.error("Network Error: {}".format(msg))
+      exit(1)
+    else:
+      server.close()
 
 
 def start_container(container_name: str):
