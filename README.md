@@ -151,7 +151,7 @@ connect to the host. There you should find logs like this:
 2023-07-23 18:21:43,416 - Received data: fe01fa000b004d0043007c00500069006e00670048006f0073007400197f0009006c006f00630061006c0068006f00730074000063dd
 ```
 
-Take the longer data string and replace the `standby_trigger_hex_payload` setting in the config file with it.
+Take the longer data string and replace or add a new entry in the `standby_trigger_hex_payload` setting of the config file with it.
 
 ## Finish line
 

@@ -1,13 +1,13 @@
 import logging
 import socket
 from logging import basicConfig, INFO, info
-from optparse import OptionParser
 from time import sleep
 
 import docker
 from docker.models.containers import Container
 from hcloud import Client
 from hcloud.server_types.domain import ServerType
+from optparse import OptionParser
 
 from tools.config import read_config, save_state, ScaleState
 from tools.scale_helper import scale_with_helper_host, teardown_helper_host
@@ -25,10 +25,10 @@ def scale_down_host(config: dict, client: Client):
                          ServerType(name=config['standby-type']))
 
 
-def wait_for_minecraft_socket(port: int, hex_payload: str):
+def wait_for_minecraft_socket(port: int, hex_payload_list: list[str]):
   with socket.create_server(('', port)) as server:
     try:
-      logging.info("Listening for: {}".format(hex_payload))
+      logging.info("Listening for any of: {}".format(hex_payload_list))
 
       while True:
         connection, _ = server.accept()
@@ -37,7 +37,7 @@ def wait_for_minecraft_socket(port: int, hex_payload: str):
         connection.close()
         logging.info("Received data: {}".format(data.hex()))
 
-        if data.hex() == hex_payload:
+        if data.hex() in hex_payload_list:
           logging.info("Correct payload detected")
           break
 
